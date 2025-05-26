@@ -3,88 +3,77 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Flash Bitcoin Wallet (Demo)</title>
+  <title>Live BTC Wallet Viewer</title>
   <style>
     body {
+      background: #121212;
+      color: #fff;
       font-family: Arial, sans-serif;
-      background-color: #121212;
-      color: #f2f2f2;
+      text-align: center;
       padding: 40px;
-      max-width: 500px;
-      margin: auto;
     }
     .wallet {
-      background-color: #1e1e1e;
-      padding: 20px;
+      background: #1f1f1f;
+      padding: 30px;
       border-radius: 10px;
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+      display: inline-block;
+      box-shadow: 0 0 20px rgba(255,255,255,0.1);
     }
-    .wallet h2 {
-      text-align: center;
-      color: #f2a900;
-    }
-    input, button {
-      width: 100%;
+    input {
       padding: 10px;
-      margin: 10px 0;
+      width: 100%;
+      margin-top: 10px;
+      font-size: 16px;
       border: none;
       border-radius: 5px;
-      font-size: 16px;
     }
     button {
-      background-color: #f2a900;
+      padding: 10px 20px;
+      margin-top: 15px;
+      background: gold;
       color: #000;
+      border: none;
       font-weight: bold;
+      border-radius: 5px;
       cursor: pointer;
     }
-    .transactions {
+    .result {
       margin-top: 20px;
-    }
-    .tx {
-      border-bottom: 1px solid #333;
-      padding: 10px 0;
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
+
   <div class="wallet">
-    <h2>Flash BTC Wallet</h2>
-    <p><strong>Fake Wallet Address:</strong> <span id="btcAddress"></span></p>
-    <p><strong>Fake Balance:</strong> <span id="btcBalance">10.00000000 BTC</span></p>
-
-    <label for="newBalance">Update Fake Balance:</label>
-    <input type="number" step="0.00000001" id="newBalance" placeholder="Enter new balance"/>
-    <button onclick="updateBalance()">Set Fake Balance</button>
-
-    <div class="transactions">
-      <h3>Transaction History</h3>
-      <div class="tx">⬅ Received 5.00000000 BTC from 1ExAmpleAddr... [Confirmed]</div>
-      <div class="tx">➡ Sent 2.00000000 BTC to 1RandomAddr... [Confirmed]</div>
-      <div class="tx">⬅ Received 7.00000000 BTC from 1AnotherAddr... [Pending]</div>
-    </div>
+    <h2>Check Bitcoin Wallet Balance</h2>
+    <input type="text" id="btcAddress" placeholder="Enter BTC Address"/>
+    <button onclick="checkBalance()">Check Balance</button>
+    <div class="result" id="balanceResult"></div>
   </div>
 
   <script>
-    function generateFakeBTCAddress() {
-      const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-      let address = '1';
-      for (let i = 0; i < 33; i++) {
-        address += chars[Math.floor(Math.random() * chars.length)];
+    async function checkBalance() {
+      const address = document.getElementById('btcAddress').value.trim();
+      const result = document.getElementById('balanceResult');
+
+      if (!address) {
+        result.textContent = "⚠️ Please enter a Bitcoin address.";
+        return;
       }
-      return address;
-    }
 
-    document.getElementById('btcAddress').textContent = generateFakeBTCAddress();
-
-    function updateBalance() {
-      const newBalance = document.getElementById('newBalance').value;
-      if (newBalance !== '') {
-        document.getElementById('btcBalance').textContent = parseFloat(newBalance).toFixed(8) + ' BTC';
-        alert('✅ Fake balance updated.');
-      } else {
-        alert('❌ Please enter a valid number.');
+      result.textContent = "Checking...";
+      
+      try {
+        const res = await fetch(`https://blockchain.info/q/addressbalance/${address}?confirmations=6`);
+        const satoshis = await res.text();
+        const btc = (parseInt(satoshis) / 1e8).toFixed(8);
+        result.innerHTML = `💰 Balance for <strong>${address}</strong>:<br><span style="font-size: 22px; color: lightgreen;">${btc} BTC</span>`;
+      } catch (e) {
+        result.textContent = "❌ Error fetching balance. Address might be invalid.";
       }
     }
   </script>
+
 </body>
 </html>
